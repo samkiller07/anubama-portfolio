@@ -105,3 +105,27 @@ create policy "Admins can manage comments" on public.comments
       select 1 from public.admin_users where user_id = auth.uid()
     ) or auth.email() = 'anubamam7@gmail.com'
   );
+
+-- 5. DEVELOPER PROFILE & SETTINGS TABLE
+create table if not exists public.profile (
+  id text primary key default 'anubama_profile',
+  profile_image_url text,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.profile enable row level security;
+
+create policy "Public can view profile" on public.profile
+  for select using (true);
+
+create policy "Admins can manage profile" on public.profile
+  for all using (
+    exists (
+      select 1 from public.admin_users where user_id = auth.uid()
+    ) or auth.email() = 'anubamam7@gmail.com'
+  );
+
+-- Pre-seed initial profile row if not present
+insert into public.profile (id, profile_image_url)
+values ('anubama_profile', null)
+on conflict (id) do nothing;

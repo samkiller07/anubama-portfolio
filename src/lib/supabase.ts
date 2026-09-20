@@ -27,6 +27,17 @@ export const isSupabaseConfigured = (): boolean => {
   }
 };
 
+export const checkSupabaseHealth = async (): Promise<boolean> => {
+  const client = getSupabaseClient();
+  if (!client || !isSupabaseConfigured()) return false;
+  try {
+    const { error } = await client.from('projects').select('id').limit(1);
+    return !error;
+  } catch {
+    return false;
+  }
+};
+
 export const getDataMode = (): 'LOCAL FALLBACK' | 'ANUBAMA SUPABASE' => {
   return isSupabaseConfigured() ? 'ANUBAMA SUPABASE' : 'LOCAL FALLBACK';
 };

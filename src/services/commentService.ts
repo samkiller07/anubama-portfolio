@@ -3,65 +3,6 @@ import { getSupabaseClient, isSupabaseConfigured } from '../lib/supabase';
 
 const COMMENTS_KEY = 'anubama_portfolio_comments_v2';
 
-const ANUBAMA_INITIAL_COMMENTS: VisitorComment[] = [
-  {
-    id: 'comm-1',
-    name: 'Kavitha Ramachandran',
-    role: 'Senior Frontend Architect',
-    company: 'NextGen Solutions',
-    comment: 'Anubama demonstrates solid frontend component structure and intuitive UX choices. Her attention to responsive details and clean state handling is excellent.',
-    rating: 5,
-    avatarColor: 'bg-rose-500',
-    status: 'approved',
-    timestamp: '2026-02-15T10:30:00.000Z',
-    parent_id: null,
-    is_admin: false,
-    replies: [
-      {
-        id: 'reply-1',
-        name: 'Anubama M',
-        role: 'Author / Software Developer',
-        company: 'Portfolio Owner',
-        comment: 'Thank you so much Kavitha! I enjoyed optimizing the component architecture and micro-animations for this portfolio.',
-        rating: 5,
-        avatarColor: 'bg-pink-600',
-        status: 'approved',
-        timestamp: '2026-02-15T14:10:00.000Z',
-        parent_id: 'comm-1',
-        is_admin: true
-      }
-    ]
-  },
-  {
-    id: 'comm-2',
-    name: 'Dr. S. K. Narayanan',
-    role: 'Academic Mentor & Project Lead',
-    company: 'KARE',
-    comment: 'Disciplined and highly dedicated developer with strong logical reasoning and quick problem-solving capability. Consistently delivers clean and well-structured code.',
-    rating: 5,
-    avatarColor: 'bg-pink-500',
-    status: 'approved',
-    timestamp: '2026-02-18T14:20:00.000Z',
-    parent_id: null,
-    is_admin: false,
-    replies: []
-  },
-  {
-    id: 'comm-3',
-    name: 'Arun Kumar',
-    role: 'Full Stack Engineer',
-    company: 'DevCraft Labs',
-    comment: 'Great grasp of Spring Boot REST APIs and database schema design. Eager to see her grow in modern enterprise engineering.',
-    rating: 5,
-    avatarColor: 'bg-purple-500',
-    status: 'approved',
-    timestamp: '2026-03-01T09:15:00.000Z',
-    parent_id: null,
-    is_admin: false,
-    replies: []
-  }
-];
-
 const getStoredRawComments = (): VisitorComment[] => {
   try {
     localStorage.removeItem('sakura_portfolio_comments');
@@ -69,7 +10,7 @@ const getStoredRawComments = (): VisitorComment[] => {
     const data = localStorage.getItem(COMMENTS_KEY);
     if (data) {
       const parsed = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
@@ -77,18 +18,9 @@ const getStoredRawComments = (): VisitorComment[] => {
     console.error('Error reading comments from local storage:', e);
   }
   
-  // Flatten initial comments for flat storage
-  const flat: VisitorComment[] = [];
-  ANUBAMA_INITIAL_COMMENTS.forEach((c) => {
-    const { replies, ...parent } = c;
-    flat.push(parent);
-    if (replies && replies.length > 0) {
-      flat.push(...replies);
-    }
-  });
-
-  localStorage.setItem(COMMENTS_KEY, JSON.stringify(flat));
-  return flat;
+  const defaultComments: VisitorComment[] = [];
+  localStorage.setItem(COMMENTS_KEY, JSON.stringify(defaultComments));
+  return defaultComments;
 };
 
 const saveStoredRawComments = (comments: VisitorComment[]) => {
@@ -147,7 +79,7 @@ export const commentService = {
           query = query.eq('status', 'approved');
         }
         const { data, error } = await query;
-        if (!error && data && data.length > 0) {
+        if (!error && Array.isArray(data)) {
           const flat: VisitorComment[] = data.map((d: any) => ({
             id: d.id,
             name: d.name,

@@ -17,6 +17,9 @@ export const About: React.FC = () => {
 
   useEffect(() => {
     setProfileImage(profileService.getProfileImage());
+    profileService.fetchProfileImage().then((img) => {
+      if (img !== undefined) setProfileImage(img);
+    });
     const unsubscribe = profileService.onProfileImageChange((newImg) => {
       setProfileImage(newImg);
     });

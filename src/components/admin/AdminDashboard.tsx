@@ -7,7 +7,7 @@ import { profileService } from '../../services/profileService';
 import { storageService } from '../../services/storageService';
 import { authService, UserSession } from '../../services/authService';
 import { AdminProjectForm } from './AdminProjectForm';
-import { isSupabaseConfigured } from '../../lib/supabase';
+import { isSupabaseConfigured, checkSupabaseHealth } from '../../lib/supabase';
 import {
   LayoutDashboard,
   FolderGit2,
@@ -65,6 +65,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const profileInputRef = useRef<HTMLInputElement | null>(null);
   const [isUploadingProfile, setIsUploadingProfile] = useState(false);
   const [pendingProfileImage, setPendingProfileImage] = useState<string | null>(null);
+  const [selectedProfileFile, setSelectedProfileFile] = useState<File | null>(null);
+  const [isDbConnected, setIsDbConnected] = useState<boolean>(isSupabaseConfigured());
 
   // Security / Password Change States
   const [currentPassword, setCurrentPassword] = useState('');
@@ -97,15 +99,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
   const loadAllData = async () => {
     try {
-      const [projs, msgs, comms] = await Promise.all([
+      const [projs, msgs, comms, profileImg, isHealthy] = await Promise.all([
         projectService.getProjects(true),
         messageService.getMessages(),
-        commentService.getComments(true)
+        commentService.getComments(true),
+        profileService.fetchProfileImage(),
+        checkSupabaseHealth()
       ]);
       setProjects(projs);
       setMessages(msgs);
       setComments(comms);
-      setProfileImage(profileService.getProfileImage());
+      setProfileImage(profileImg);
+      setIsDbConnected(isHealthy);
     } catch (err) {
       console.error('Error loading dashboard data:', err);
     }
@@ -252,6 +257,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     try {
       const dataUrl = await storageService.readFileAsDataUrl(file);
       if (dataUrl && dataUrl.startsWith('data:image/')) {
+        setSelectedProfileFile(file);
         setPendingProfileImage(dataUrl);
         onShowToast('Image loaded for preview. Click "Save Profile Picture" to apply.');
       }
@@ -266,33 +272,51 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
-  const handleSaveProfileImage = () => {
+  const handleSaveProfileImage = async () => {
     if (!pendingProfileImage) return;
+    setIsUploadingProfile(true);
     try {
-      profileService.setProfileImage(pendingProfileImage);
-      setProfileImage(pendingProfileImage);
+      let finalImageUrl = pendingProfileImage;
+      if (selectedProfileFile) {
+        const uploadRes = await storageService.uploadProfileImage(selectedProfileFile);
+        if (uploadRes.url) {
+          finalImageUrl = uploadRes.url;
+        }
+      }
+      await profileService.setProfileImage(finalImageUrl);
+      setProfileImage(finalImageUrl);
       setPendingProfileImage(null);
+      setSelectedProfileFile(null);
       onShowToast('🌸 Profile picture saved and published to portfolio!');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to save profile picture:', err);
-      onShowToast('Failed to save profile picture.');
+      onShowToast(err?.message || 'Failed to save profile picture.');
+    } finally {
+      setIsUploadingProfile(false);
     }
   };
 
   const handleCancelProfileImage = () => {
     setPendingProfileImage(null);
+    setSelectedProfileFile(null);
     if (profileInputRef.current) {
       profileInputRef.current.value = '';
     }
     onShowToast('Cancelled profile picture change.');
   };
 
-  const handleRemoveProfileImage = () => {
+  const handleRemoveProfileImage = async () => {
     if (window.confirm('Remove custom profile picture and revert to the Sakura avatar?')) {
-      profileService.removeProfileImage();
-      setProfileImage(null);
-      setPendingProfileImage(null);
-      onShowToast('Profile picture removed (reverted to Sakura avatar)');
+      try {
+        await profileService.removeProfileImage();
+        setProfileImage(null);
+        setPendingProfileImage(null);
+        setSelectedProfileFile(null);
+        onShowToast('Profile picture removed (reverted to Sakura avatar)');
+      } catch (err) {
+        console.error('Failed to remove profile image:', err);
+        onShowToast('Failed to remove profile picture.');
+      }
     }
   };
 
@@ -405,8 +429,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="flex items-center gap-2">
               <span className="font-bold text-white text-sm sm:text-base tracking-tight truncate">Anubama M Console</span>
               <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-pink-500/10 border border-pink-500/20 text-[11px] font-medium text-pink-200">
-                <span className={`w-1.5 h-1.5 rounded-full ${isSupabaseConfigured() ? 'bg-emerald-400' : 'bg-slate-400'}`} />
-                <span>{isSupabaseConfigured() ? '● Database Connected' : '● Local Mode'}</span>
+                <span className={`w-1.5 h-1.5 rounded-full ${isDbConnected ? 'bg-emerald-400' : 'bg-slate-400'}`} />
+                <span>{isDbConnected ? '● Database Connected' : '● Local Mode'}</span>
               </span>
             </div>
             <span className="text-[11px] text-pink-300/60 font-mono hidden sm:inline">
@@ -502,9 +526,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
             {/* Database Status */}
             <div className="pt-4 border-t border-pink-500/20 flex items-center gap-2 text-xs">
-              <span className={`w-2 h-2 rounded-full ${isSupabaseConfigured() ? 'bg-emerald-400' : 'bg-slate-400'}`} />
+              <span className={`w-2 h-2 rounded-full ${isDbConnected ? 'bg-emerald-400' : 'bg-slate-400'}`} />
               <span className="font-medium text-slate-300">
-                {isSupabaseConfigured() ? 'Database Connected' : 'Local Mode'}
+                {isDbConnected ? 'Database Connected' : 'Local Mode'}
               </span>
             </div>
           </div>
@@ -550,9 +574,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
           {/* Database Status */}
           <div className="mt-4 pt-4 border-t border-pink-500/15 p-2 flex items-center gap-2 text-xs">
-            <span className={`w-2 h-2 rounded-full ${isSupabaseConfigured() ? 'bg-emerald-400' : 'bg-slate-400'}`} />
+            <span className={`w-2 h-2 rounded-full ${isDbConnected ? 'bg-emerald-400' : 'bg-slate-400'}`} />
             <span className="font-medium text-slate-300">
-              {isSupabaseConfigured() ? 'Database Connected' : 'Local Mode'}
+              {isDbConnected ? 'Database Connected' : 'Local Mode'}
             </span>
           </div>
         </aside>
@@ -619,14 +643,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <div className="bg-[#130e1d]/90 border border-pink-500/25 rounded-2xl p-5 backdrop-blur-sm relative overflow-hidden">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-pink-300 uppercase tracking-wider">Database Status</span>
-                    <ShieldCheck className={`w-5 h-5 ${isSupabaseConfigured() ? 'text-emerald-400' : 'text-pink-400'}`} />
+                    <ShieldCheck className={`w-5 h-5 ${isDbConnected ? 'text-emerald-400' : 'text-pink-400'}`} />
                   </div>
                   <div className="text-lg font-bold text-white mt-2 flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${isSupabaseConfigured() ? 'bg-emerald-400' : 'bg-slate-400'}`} />
-                    <span>{isSupabaseConfigured() ? 'Database Connected' : 'Local Mode'}</span>
+                    <span className={`w-2 h-2 rounded-full ${isDbConnected ? 'bg-emerald-400' : 'bg-slate-400'}`} />
+                    <span>{isDbConnected ? 'Database Connected' : 'Local Mode'}</span>
                   </div>
                   <div className="text-xs text-slate-400 mt-1">
-                    {isSupabaseConfigured() ? 'Anubama Supabase' : 'Isolated Local Storage'}
+                    {isDbConnected ? 'Anubama Supabase' : 'Isolated Local Storage'}
                   </div>
                 </div>
               </div>

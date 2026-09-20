@@ -113,6 +113,52 @@ export const storageService = {
   },
 
   /**
+   * Upload profile portrait image
+   * Uploads to Supabase Storage under 'profile/' folder and returns public URL
+   */
+  async uploadProfileImage(file: File): Promise<UploadResult> {
+    const validation = this.validateImageFile(file);
+    if (!validation.valid) {
+      return { url: '', error: validation.error };
+    }
+
+    const client = getSupabaseClient();
+    if (client && isSupabaseConfigured()) {
+      try {
+        const ext = file.name.split('.').pop() || 'jpg';
+        const sanitizedExt = ext.replace(/[^a-zA-Z0-9]/g, '');
+        const filePath = `profile/avatar_${Date.now()}.${sanitizedExt}`;
+
+        const { error: uploadError } = await client.storage
+          .from(STORAGE_BUCKET)
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true
+          });
+
+        if (!uploadError) {
+          const { data } = client.storage.from(STORAGE_BUCKET).getPublicUrl(filePath);
+          if (data?.publicUrl) {
+            return { url: data.publicUrl, isLocalMode: false };
+          }
+        } else {
+          console.warn('Supabase profile storage upload error:', uploadError);
+        }
+      } catch (err) {
+        console.warn('Dedicated Supabase storage profile upload failed, using local preview:', err);
+      }
+    }
+
+    // Isolated Local Fallback Mode
+    try {
+      const dataUrl = await this.readFileAsDataUrl(file);
+      return { url: dataUrl, isLocalMode: true };
+    } catch (e: any) {
+      return { url: '', error: e.message || 'Failed to process image locally.' };
+    }
+  },
+
+  /**
    * Delete image from storage if applicable
    */
   async deleteProjectImage(imageUrl: string): Promise<void> {
