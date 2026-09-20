@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, FileDown, Send, ShieldAlert } from 'lucide-react';
+import { Menu, X, FileDown, Send } from 'lucide-react';
 import { profileService } from '../services/profileService';
 
 interface NavbarProps {
   onOpenResumeModal: () => void;
-  onNavigateAdmin: () => void;
+  onNavigateAdmin?: () => void;
   isSakuraEnabled: boolean;
   onToggleSakura: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   onOpenResumeModal,
-  onNavigateAdmin,
+  onNavigateAdmin: _onNavigateAdmin,
   isSakuraEnabled,
   onToggleSakura
 }) => {
@@ -151,16 +151,6 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </button>
 
-            {/* Admin Portal Link */}
-            <button
-              onClick={onNavigateAdmin}
-              title="Open Admin Console"
-              className="px-3 py-2 rounded-xl text-xs font-medium text-pink-300/80 hover:text-pink-200 bg-pink-950/30 hover:bg-pink-900/40 border border-pink-500/20 transition-all flex items-center gap-1.5"
-            >
-              <ShieldAlert className="w-3.5 h-3.5 text-pink-400" />
-              <span>Admin</span>
-            </button>
-
             {/* Resume Button */}
             <button
               onClick={onOpenResumeModal}
@@ -224,17 +214,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             </nav>
 
             <div className="pt-3 border-t border-pink-500/20 flex flex-col gap-2">
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  onNavigateAdmin();
-                }}
-                className="w-full py-2.5 px-4 rounded-xl bg-pink-950/40 border border-pink-500/30 text-pink-300 text-xs font-semibold flex items-center justify-center gap-2"
-              >
-                <ShieldAlert className="w-4 h-4" />
-                <span>Admin Console</span>
-              </button>
-
               <a
                 href="#contact"
                 onClick={(e) => handleNavClick(e, '#contact')}

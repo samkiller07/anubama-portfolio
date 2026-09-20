@@ -1,12 +1,12 @@
 import React from 'react';
-import { ArrowUp, Github, Linkedin, Mail, Instagram, ShieldAlert } from 'lucide-react';
+import { ArrowUp, Github, Linkedin, Mail, Instagram } from 'lucide-react';
 import { personalInfo } from '../data/portfolioData';
 
 interface FooterProps {
   onNavigateAdmin?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onNavigateAdmin }) => {
+export const Footer: React.FC<FooterProps> = ({ onNavigateAdmin: _onNavigateAdmin }) => {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -34,7 +34,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateAdmin }) => {
           <div className="md:col-span-6 flex flex-col items-start">
             <div className="flex items-center gap-2.5 mb-3">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 via-rose-500 to-pink-600 flex items-center justify-center text-white font-bold text-base shadow-lg shadow-pink-500/25">
-                桜
+                🌸
               </div>
               <span className="font-bold text-xl text-white">
                 Anubama M
@@ -68,10 +68,10 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateAdmin }) => {
             </ul>
           </div>
 
-          {/* Social Profiles & Admin */}
+          {/* Social Profiles */}
           <div className="md:col-span-3">
             <h4 className="text-xs font-mono uppercase tracking-wider text-pink-300 font-semibold mb-4">
-              Connect &amp; Admin
+              Connect
             </h4>
             <div className="flex flex-col gap-2.5">
               <a
@@ -109,21 +109,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigateAdmin }) => {
                 <Mail className="w-4 h-4 text-pink-400" />
                 <span>{personalInfo.email}</span>
               </a>
-
-              <div className="pt-2">
-                <a
-                  href="#admin"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (onNavigateAdmin) onNavigateAdmin();
-                    else window.location.hash = '#admin';
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-pink-950/40 hover:bg-pink-900/50 text-pink-300 text-xs font-medium border border-pink-500/20 transition-colors"
-                >
-                  <ShieldAlert className="w-3.5 h-3.5 text-pink-400" />
-                  <span>Admin Console Portal</span>
-                </a>
-              </div>
             </div>
           </div>
 

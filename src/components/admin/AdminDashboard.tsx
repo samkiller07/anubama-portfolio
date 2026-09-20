@@ -1322,7 +1322,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         type={showCurrentPassword ? 'text' : 'password'}
                         value={currentPassword}
                         onChange={(e) => setCurrentPassword(e.target.value)}
-                        placeholder="Enter current password or initial setup key"
+                        placeholder="Enter current password"
                         required
                         className="w-full px-4 py-2.5 pr-11 rounded-xl bg-[#0a0711] border border-pink-500/20 focus:border-pink-400 focus:ring-2 focus:ring-pink-500/20 text-white placeholder-slate-500 text-xs sm:text-sm outline-none transition-all"
                       />

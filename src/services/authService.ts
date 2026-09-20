@@ -9,7 +9,6 @@ export interface UserSession {
 
 const LOCAL_ADMIN_KEY = 'sakura_admin_session';
 const LOCAL_CREDENTIAL_HASH_KEY = 'anubama_admin_credential_hash_v1';
-const DEFAULT_INITIAL_KEYS = ['anubama2026', 'sakura2026', 'admin123', 'anubama@admin'];
 
 /**
  * Computes a salted SHA-256 hash of a password using the Web Crypto API.
@@ -99,7 +98,7 @@ export const authService = {
   },
 
   /**
-   * Internal credential verifier against stored SHA-256 hash or initial default keys
+   * Internal credential verifier against stored salted SHA-256 hash
    */
   async verifyCredential(passwordOrKey: string): Promise<boolean> {
     const trimmed = passwordOrKey.trim();
@@ -108,26 +107,29 @@ export const authService = {
     const storedHash = localStorage.getItem(LOCAL_CREDENTIAL_HASH_KEY);
 
     if (storedHash) {
-      // Custom password has been configured by the owner
       const inputHash = await hashCredential(trimmed);
       return inputHash === storedHash;
-    } else {
-      // Initial default state before password is changed
-      return DEFAULT_INITIAL_KEYS.includes(trimmed) || trimmed === 'sakura-admin-pass';
     }
+
+    return false;
   },
 
   /**
-   * Admin Login with email/pass or access key
+   * Admin Login with email/pass or configured credentials
    */
   async login(passwordOrKey: string, email: string = 'anubamam7@gmail.com'): Promise<{ success: boolean; error?: string; session?: UserSession }> {
-    // Try Supabase auth first if configured
+    const trimmed = passwordOrKey.trim();
+    if (!trimmed) {
+      return { success: false, error: 'Password or security key is required.' };
+    }
+
+    // 1. Authenticate against Supabase Auth
     const client = getSupabaseClient();
     if (client && isSupabaseConfigured()) {
       try {
         const { data, error } = await client.auth.signInWithPassword({
           email,
-          password: passwordOrKey
+          password: trimmed
         });
 
         if (!error && data.session) {
@@ -141,12 +143,12 @@ export const authService = {
           return { success: true, session: userSession };
         }
       } catch (err) {
-        console.warn('Supabase direct auth attempt, falling back to local verification:', err);
+        console.warn('Supabase Auth sign-in note:', err);
       }
     }
 
-    // Local admin credential verification (stored SHA-256 hash or initial key)
-    const isValid = await this.verifyCredential(passwordOrKey);
+    // 2. Fallback to owner configured cryptographic hash
+    const isValid = await this.verifyCredential(trimmed);
     if (isValid) {
       const session: UserSession = {
         email: email || 'anubamam7@gmail.com',
@@ -160,7 +162,7 @@ export const authService = {
 
     return {
       success: false,
-      error: 'Invalid credentials. Please enter a valid administrative password or access key.'
+      error: 'Invalid credentials. Please verify your admin password.'
     };
   },
 

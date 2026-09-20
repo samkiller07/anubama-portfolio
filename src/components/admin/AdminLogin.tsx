@@ -98,7 +98,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel
 
             <div>
               <label className="block text-xs font-semibold text-pink-200 uppercase tracking-wider mb-2">
-                Passkey / Security Token
+                Admin Password
               </label>
               <div className="relative">
                 <input
@@ -106,17 +106,11 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel
                   value={passkey}
                   onChange={(e) => setPasskey(e.target.value)}
                   required
-                  placeholder="Enter security key (e.g. anubama2026)"
+                  placeholder="Enter your admin password"
                   className="w-full px-4 py-3 pl-11 rounded-xl bg-[#0d0a14] border border-pink-500/20 focus:border-pink-400 focus:ring-2 focus:ring-pink-500/20 text-white placeholder-slate-500 text-sm outline-none transition-all"
                 />
                 <KeyRound className="w-4 h-4 text-pink-400 absolute left-4 top-1/2 -translate-y-1/2" />
               </div>
-              <p className="text-[11px] text-pink-300/70 mt-1.5 flex items-center gap-1">
-                <span>Default development key:</span>
-                <code className="px-1.5 py-0.5 rounded bg-pink-950/60 border border-pink-500/20 font-mono text-pink-200">
-                  anubama2026
-                </code>
-              </p>
             </div>
 
             <button
