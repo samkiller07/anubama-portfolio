@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-[#0a0711] text-slate-200 antialiased overflow-x-hidden;
+  }
+  ::selection {
+    @apply bg-pink-500/30 text-pink-100;
+  }
+}
+
+/* Sleek Sakura custom scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0711;
+}
+::-webkit-scrollbar-thumb {
+  background: #251733;
+  border-radius: 9999px;
+  border: 1px solid rgba(251, 113, 133, 0.15);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #f43f6e;
+}
+
+/* Subtle background patterns */
+.sakura-card {
+  background: rgba(20, 14, 32, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(251, 113, 133, 0.18);
+}
+
+.sakura-card:hover {
+  border-color: rgba(251, 113, 133, 0.4);
+  box-shadow: 0 12px 35px -10px rgba(244, 63, 110, 0.2);
+}
+
+.text-gradient-sakura {
+  background: linear-gradient(135deg, #ffffff 15%, #fecdd8 50%, #fb7185 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
