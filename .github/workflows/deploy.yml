@@ -35,6 +35,11 @@ jobs:
 
       - name: Build production bundle
         run: npm run build
+        env:
+          VITE_ANUBAMA_SUPABASE_URL: ${{ secrets.VITE_ANUBAMA_SUPABASE_URL || vars.VITE_ANUBAMA_SUPABASE_URL || 'https://hkzwywqlmtpkymqyddow.supabase.co' }}
+          VITE_ANUBAMA_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_ANUBAMA_SUPABASE_PUBLISHABLE_KEY || vars.VITE_ANUBAMA_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_70ZNkJSTCGsjRUGi3msJtA_oNTUSJye' }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || vars.NEXT_PUBLIC_SUPABASE_URL || 'https://hkzwywqlmtpkymqyddow.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_70ZNkJSTCGsjRUGi3msJtA_oNTUSJye' }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
